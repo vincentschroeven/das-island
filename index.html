@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta property="og:title" content="das island">
-<meta property="og:description" content="index of experiments.">
+<meta property="og:description" content="experiments, songs and links.">
 <meta property="og:image" content="https://vincentschroeven.github.io/das-island/og.jpg">
 <meta property="og:url" content="https://vincentschroeven.github.io/das-island/">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Das Island</title>
-<meta name="description" content="Das Island. Index of experiments.">
+<meta name="description" content="Das Island. Experiments, songs and links.">
 <style>
 /* Layout: één smalle kolom: bovenaan het eiland in een blauw tekenraster, daaronder een stille index zoals een bijschrift */
 :root{
@@ -23,7 +23,16 @@
 }
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--type);font-weight:400;font-size:14px;line-height:1.55;text-transform:lowercase}
 main{max-width:600px;margin:0 auto;padding-block:clamp(28px,7vh,72px) 64px;gap:40px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:grid;gap:32px}
-.island{display:block;width:100%;height:auto;max-width:100%}
+.island{position:absolute;left:0;top:0;width:100%;z-index:0;pointer-events:none}
+html,body{position:relative}
+main{position:relative;z-index:1}
+.spacer{height:var(--isle,300px)}
+/* tekst ligt als labels op de tekening: wit vlakje net achter de woorden */
+.lab,.exp .no,.exp h2,.exp p,.group .lbl,.btn{background:var(--paper);box-shadow:0 0 0 4px var(--paper);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.exp p{display:inline}
+.exp p+a{margin-top:2px}
+.exp>div{display:grid;justify-items:start;gap:2px}
+.exp .no{justify-self:start;align-self:start}
 h1{font-family:var(--title);font-weight:400;font-size:14px;line-height:1.4;margin:0}
 .sub{margin:0;color:var(--muted)}
 .exp{display:grid;grid-template-columns:3ch 1fr;gap:0 12px}
@@ -43,12 +52,12 @@ h1{font-family:var(--title);font-weight:400;font-size:14px;line-height:1.4;margi
 <body>
 
 
+<canvas class="island" id="island" role="img" aria-label="An island with rolling hills, drawn in blue marks on a grid: dots for the sky, hatching and crosses for the land, wavy lines for the sea"></canvas>
 <main>
-  <canvas class="island" id="island" width="1200" height="760" role="img" aria-label="An island with rolling hills, drawn in blue marks on a grid: dots for the sky, hatching and crosses for the land, wavy lines for the sea"></canvas>
+  <div class="spacer" aria-hidden="true"></div>
 
   <header>
-    <h1>Das Island</h1>
-    <p class="sub">Index of experiments</p>
+    <h1><span class="lab">Das Island</span></h1>
   </header>
 
   <section class="exp" aria-label="Experiment 01">
@@ -80,61 +89,64 @@ h1{font-family:var(--title);font-weight:400;font-size:14px;line-height:1.4;margi
     </div>
   </section>
 
-  <p class="end">End of index.</p>
 </main>
 
 <script>
-// het eiland in een raster van tekens: puntjes voor de lucht, doorlopende streepjes, een net van kruisjes en bolletjes voor het land, golflijnen voor de zee
+// het eiland in een raster van tekens, over de hele pagina: lucht, eiland, en de zee die doorloopt achter de index
 (function(){
-const W=1200,H=760,S=19,COLS=Math.floor(W/S),ROWS=Math.floor(H/S);
+const S=9; // celgrootte in css-pixels
 function rng(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return s/2147483647;};}
-// tekens, allemaal vector zodat ze scherp en gelijk blijven
 const M={
-  dot:(x,cx,cy,k)=>{x.beginPath();x.arc(cx,cy,1.7*k,0,7);x.fill();},
-  slash:(x,cx,cy,k)=>{x.beginPath();x.moveTo(cx-S*0.5,cy+S*0.5);x.lineTo(cx+S*0.5,cy-S*0.5);x.stroke();},
-  mesh:(x,cx,cy,k)=>{const a=S*0.5;x.beginPath();x.moveTo(cx-a,cy);x.lineTo(cx+a,cy);x.moveTo(cx,cy-a);x.lineTo(cx,cy+a);x.stroke();},
-  plus:(x,cx,cy,k)=>{const a=S*0.36;x.beginPath();x.moveTo(cx-a,cy);x.lineTo(cx+a,cy);x.moveTo(cx,cy-a);x.lineTo(cx,cy+a);x.stroke();},
-  disc:(x,cx,cy,k)=>{x.beginPath();x.arc(cx,cy,S*0.36,0,7);x.fill();},
-  ring:(x,cx,cy,k)=>{x.beginPath();x.arc(cx,cy,S*0.36,0,7);x.stroke();},
-  tri:(x,cx,cy,k)=>{const a=S*0.38;x.beginPath();x.moveTo(cx,cy-a);x.lineTo(cx+a,cy+a*0.75);x.lineTo(cx-a,cy+a*0.75);x.closePath();x.stroke();},
-  dash:(x,cx,cy,k)=>{x.beginPath();x.moveTo(cx-S*0.5,cy);x.lineTo(cx+S*0.5,cy);x.stroke();},
-  cross:(x,cx,cy,k)=>{const a=S*0.28;x.beginPath();x.moveTo(cx-a,cy-a);x.lineTo(cx+a,cy+a);x.moveTo(cx+a,cy-a);x.lineTo(cx-a,cy+a);x.stroke();}
+  dot:(x,cx,cy,k)=>{x.beginPath();x.arc(cx,cy,0.8*k,0,7);x.fill();},
+  slash:(x,cx,cy)=>{x.beginPath();x.moveTo(cx-S*0.5,cy+S*0.5);x.lineTo(cx+S*0.5,cy-S*0.5);x.stroke();},
+  mesh:(x,cx,cy)=>{const a=S*0.5;x.beginPath();x.moveTo(cx-a,cy);x.lineTo(cx+a,cy);x.moveTo(cx,cy-a);x.lineTo(cx,cy+a);x.stroke();},
+  plus:(x,cx,cy)=>{const a=S*0.36;x.beginPath();x.moveTo(cx-a,cy);x.lineTo(cx+a,cy);x.moveTo(cx,cy-a);x.lineTo(cx,cy+a);x.stroke();},
+  disc:(x,cx,cy)=>{x.beginPath();x.arc(cx,cy,S*0.36,0,7);x.fill();},
+  ring:(x,cx,cy)=>{x.beginPath();x.arc(cx,cy,S*0.36,0,7);x.stroke();},
+  dash:(x,cx,cy)=>{x.beginPath();x.moveTo(cx-S*0.5,cy);x.lineTo(cx+S*0.5,cy);x.stroke();}
 };
-// het eiland: twee heuvels en een huisje, met schaal en plaats per variant
-function island(o){
-  const sea=Math.round(ROWS*o.sea);
-  // een zachte, afgeronde koepel: een halve ellips
-  const prof=c=>{const X=c/COLS,m=(o.from+o.to)/2,hw=(o.to-o.from)/2,u=(X-m)/hw;if(Math.abs(u)>=1)return 0;
-    const roll=1+0.22*Math.sin(u*7.5+1.2)+0.12*Math.sin(u*15+0.4);
-    return o.h*15*Math.pow(1-u*u,0.7)*roll;};
-  return {sea,prof};
-}
-function draw(cv,o){
-  const x=cv.getContext('2d'),r=rng(o.seed||5),I=island(o);
-  x.fillStyle=o.bg;x.fillRect(0,0,W,H);x.fillStyle=o.ink;x.strokeStyle=o.ink;x.lineWidth=o.lw||2.2;x.lineCap='butt';
+const cv=document.getElementById('island'),main=document.querySelector('main');
+function draw(){
+  const dpr=Math.min(window.devicePixelRatio||1,2),W=document.documentElement.clientWidth,H=Math.max(document.documentElement.scrollHeight,window.innerHeight);
+  // het eiland krijgt de breedte van de tekstkolom
+  const mr=main.getBoundingClientRect(),cs=getComputedStyle(main),L=mr.left+parseFloat(cs.paddingLeft),R=mr.right-parseFloat(cs.paddingRight);
+  const COLS=Math.ceil(W/S),ROWS=Math.ceil(H/S),c0=L/S,c1=R/S,iw=c1-c0;
+  const top=main.offsetTop/S+parseFloat(cs.paddingTop)/S;           // waar de kolom begint
+  const isleRows=Math.round(iw*0.46),sea=Math.round(top+isleRows);    // zeelijn, eiland in verhouding tot de kolombreedte
+  document.documentElement.style.setProperty('--isle',(sea*S-main.offsetTop-parseFloat(cs.paddingTop)+S*2)+'px');
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
+  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);
+  x.fillStyle='#ffffff';x.fillRect(0,0,W,H);x.fillStyle='#3f6fd6';x.strokeStyle='#3f6fd6';x.lineWidth=1;x.lineCap='butt';
+  const r=rng(5),hmax=iw*0.27;
+  const prof=c=>{const u=((c+0.5)-(c0+c1)/2)/(iw*0.5);if(Math.abs(u)>=1)return 0;
+    const roll=1+0.22*Math.sin(u*7.5+1.2)+0.12*Math.sin(u*15+0.4);return hmax*Math.pow(1-u*u,0.7)*roll;};
+  const cloud=[c0+iw*0.84,top+iw*0.063];
   for(let row=0;row<ROWS;row++)for(let c=0;c<COLS;c++){
-    const cx=c*S+S/2,cy=row*S+S/2,h=I.prof(c),top=Math.ceil(I.sea-h);
-    if(h>0&&row>=top&&row<I.sea){
-      const n=0.5+0.22*Math.sin(c*0.19+Math.sin(row*0.33)*1.6)+0.2*Math.sin(row*0.31+c*0.06+2.1)+0.12*Math.sin((c+row)*0.13)+0.09*Math.sin(c*0.53+row*0.41)+0.07*Math.sin(c*0.37-row*0.61+1.3)+(I.sea-row<3?0.18:0);
-      if(row===top&&r()<0.25){M.plus(x,cx,cy,1);continue;}       // losse kruisjes langs de rug
-      if(n>0.86){M.disc(x,cx,cy,1);continue;}
-      if(n>0.6){M.mesh(x,cx,cy,1);continue;}
-      M.slash(x,cx,cy,1);continue;}
-    if(row===I.sea&&h>0){M.dot(x,cx,cy,1.4);continue;}
-    if(row>I.sea){const t=(row-I.sea)/(ROWS-I.sea);
+    const cx=c*S+S/2,cy=row*S+S/2,h=prof(c),tp=Math.ceil(sea-h);
+    if(h>0&&row>=tp&&row<sea){
+      const n=0.5+0.22*Math.sin(c*0.19+Math.sin(row*0.33)*1.6)+0.2*Math.sin(row*0.31+c*0.06+2.1)+0.12*Math.sin((c+row)*0.13)+0.09*Math.sin(c*0.53+row*0.41)+0.07*Math.sin(c*0.37-row*0.61+1.3)+(sea-row<3?0.18:0);
+      if(row===tp&&r()<0.25){M.plus(x,cx,cy);continue;}
+      if(n>0.86){M.disc(x,cx,cy);continue;}
+      if(n>0.6){M.mesh(x,cx,cy);continue;}
+      M.slash(x,cx,cy);continue;}
+    if(row===sea&&h>0){M.dot(x,cx,cy,1.4);continue;}
+    if(row>sea){const t=Math.min(1,(row-sea)/14);
       const w=Math.sin(c*0.16+row*0.9)+0.8*Math.sin(c*0.07-row*0.5);
-      if(w>1.0-t*0.7){M.dash(x,cx,cy,1);continue;}
-      if(w<-1.45&&t>0.45){M.disc(x,cx,cy,1);continue;}
-      if(w<-1.2){M.ring(x,cx,cy,1);continue;}
+      if(w>1.0-t*0.7){M.dash(x,cx,cy);continue;}
+      if(w<-1.45&&t>0.45){M.disc(x,cx,cy);continue;}
+      if(w<-1.2){M.ring(x,cx,cy);continue;}
       M.dot(x,cx,cy,0.9);continue;}
-    // lucht: fijne puntjes, met hier en daar een wolk van rondjes
-    if(o.cloud){const dx=(c/COLS-o.cloud[0])*2.2,dy=(row/ROWS-o.cloud[1])*4.2;if(dx*dx+dy*dy<0.055){M.ring(x,cx,cy,1);continue;}}
+    const dx=(c-cloud[0])/iw*2.2,dy=(row-cloud[1])/(iw*0.635)*4.2;
+    if(dx*dx+dy*dy<0.055){M.ring(x,cx,cy);continue;}
     M.dot(x,cx,cy,1);
   }
 }
-
-const cv=document.getElementById('island');
-draw(cv,{from:0.06,to:0.94,h:1.0,sea:0.64,bg:'#ffffff',ink:'#3f6fd6',cloud:[0.84,0.1],lw:2});
+let raf=0,lastW=0,lastH=0;
+function sched(){cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const W=document.documentElement.clientWidth,H=document.documentElement.scrollHeight;
+  if(W===lastW&&Math.abs(H-lastH)<2)return;lastW=W;lastH=H;cv.style.height='0px';draw();lastH=document.documentElement.scrollHeight;});}
+draw();lastW=document.documentElement.clientWidth;lastH=document.documentElement.scrollHeight;
+addEventListener('resize',sched);
+try{new ResizeObserver(sched).observe(main);}catch(e){}
 })();
 </script>
 
